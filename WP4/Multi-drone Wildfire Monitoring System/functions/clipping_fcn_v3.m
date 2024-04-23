@@ -1,0 +1,82 @@
+function [X,Y,N] = clipping_fcn_v3(x,y,n) %,flg,flgIndex
+    % Function for clipping sections that intersect.
+    % inputs:
+    %           x - vector with x cordinates
+    %           y - vector with y cordinates
+    %           intX - 
+    %           intY -
+    %           intSegments -
+    % outputs:
+    %           X - 
+    %           Y - 
+    %           N - 
+    
+%     concaveResult = getConcavePoints(x,y);
+%     concaveResult.angle = (concaveResult.angle*360)/(2*pi);
+    
+    [intX,intY,intSegments,intN] = checkLinesIntersect(x,y);
+    X=[];Y=[];flg=[];
+    if intN == 0
+        N=-1;
+        return
+    end
+
+    %% check if the last point is included in the intSegments
+    for i=1:intN
+        if intSegments{i}(4)==n
+
+        end
+    end
+
+
+    %% Flag internal loop intersection segments
+    flg = ones(1,intN);
+    for i=1:intN-1
+        for j=i+1:intN
+            if flg(j) && segmentIncluded(intSegments{j}(1),intSegments{j}(4),intSegments{i}(1),intSegments{i}(4))
+                flg(j) = 0;
+            end
+        end
+    end
+    updintN = sum(flg);
+    flgIndex = find(flg);
+    updintX = intX(flgIndex);
+    updintY = intY(flgIndex);
+    for i=1:updintN
+        updintSegments{i} = intSegments{flgIndex(i)};
+    end
+
+%     intX = intX(flag);
+%     intY = intY(flag);
+%     intSegments = intSegments
+
+
+
+
+    for i=1:updintN
+        if i==1
+            X = x(1:updintSegments{i}(1));
+            Y = y(1:updintSegments{i}(1));
+        else
+            X = [X;x(updintSegments{i-1}(4):updintSegments{i}(1))];
+            Y = [Y;y(updintSegments{i-1}(4):updintSegments{i}(1))];
+        end
+        X = [X;updintX(i)];
+        Y = [Y;updintY(i)];
+    end
+    X = [X;x(updintSegments{i}(4):n)];
+    Y = [Y;y(updintSegments{i}(4):n)];
+    N = length(X);
+    
+end
+
+
+function res = segmentIncluded(B1,B2,A1,A2)
+    if (B1>=A1) && (B2<=A2)
+        res = true;
+    else
+        res = false;
+    end
+end
+
+

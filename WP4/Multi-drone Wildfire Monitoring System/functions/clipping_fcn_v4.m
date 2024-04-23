@@ -1,0 +1,97 @@
+function [X,Y,N] = clipping_fcn_v4(x,y,n) %,flg,flgIndex
+    % Function for clipping sections that intersect.
+    % inputs:
+    %           x - vector with x cordinates
+    %           y - vector with y cordinates
+    %           intX - 
+    %           intY -
+    %           intSegments -
+    % outputs:
+    %           X - 
+    %           Y - 
+    %           N - 
+    
+%     concaveResult = getConcavePoints(x,y);
+%     concaveResult.angle = (concaveResult.angle*360)/(2*pi);
+    
+    [intX,intY,intSegments,intN] = checkLinesIntersect(x,y);
+    X=[];Y=[];
+    if intN == 0
+        N=-1;
+        return
+    end
+
+
+
+    %% find start point to avoid clipping start and finish loop
+    flg = ones(1,intN);indexStart=1;
+    for i=1:intN
+        dif = intSegments{i}(4)-intSegments{i}(1);
+        if dif>40
+            flg(i) = 0;
+            indexStart = i;
+        end
+    end
+
+
+    if flg(1) == 0
+        for i=1:indexStart
+            flg(i) = 0;
+        end
+        indexStart = indexStart+1;
+        startPoint = intSegments{indexStart}(1);
+    else
+        startPoint = 1;
+    end
+    
+
+    %% Flag internal loop intersection segments
+    for i=indexStart:intN-1
+        for j=i+1:intN
+            if flg(j) && segmentIncluded(intSegments{j}(1),intSegments{j}(4),intSegments{i}(1),intSegments{i}(4))
+                flg(j) = 0;
+            end
+        end
+    end
+    updintN = sum(flg);
+    flgIndex = find(flg);
+    updintX = intX(flgIndex);
+    updintY = intY(flgIndex);
+    for i=1:updintN
+        updintSegments{i} = intSegments{flgIndex(i)};
+    end
+
+%     intX = intX(flag);
+%     intY = intY(flag);
+%     intSegments = intSegments
+
+
+
+
+    for i=1:updintN
+        if i==1
+            X = x(startPoint:updintSegments{i}(1));
+            Y = y(startPoint:updintSegments{i}(1));
+        else
+            X = [X;x(updintSegments{i-1}(4):updintSegments{i}(1))];
+            Y = [Y;y(updintSegments{i-1}(4):updintSegments{i}(1))];
+        end
+        X = [X;updintX(i)];
+        Y = [Y;updintY(i)];
+    end
+    X = [X;x(updintSegments{i}(4):n);x(startPoint)];
+    Y = [Y;y(updintSegments{i}(4):n);y(startPoint)];
+    N = length(X);
+    
+end
+
+
+function res = segmentIncluded(B1,B2,A1,A2)
+    if (B1>=A1) && (B2<=A2)
+        res = true;
+    else
+        res = false;
+    end
+end
+
+
